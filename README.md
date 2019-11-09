@@ -1,2 +1,2 @@
 # zooklient
-a simple zookeeper client written in go
+a simple zookeeper command line client written in go
