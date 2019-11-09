@@ -25,12 +25,13 @@ const (
 	extendMask       = uint64(0xff00000000000000)
 	reservedBitsMask = uint64(0x00ffff0000000000)
 	maxTTL           = ^(extendMask | reservedBitsMask)
+	historyCount     = 10
 )
 
 var (
 	zkconn = &zkConn{nil}
 	//store history commands
-	history = make([]string, 0)
+	history = make([]string, 0, historyCount)
 	//default acls when creating nodes in zk
 	unSafeACL = []zk.ACL{
 		zk.ACL{Perms: zk.PermAll, Scheme: "world", ID: "anyone"},
@@ -109,36 +110,37 @@ func isConnected(con *zk.Conn) bool {
 func loop() {
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		command, err := reader.ReadString('\n')
+		line, err := reader.ReadString('\n')
 		if err != nil {
 			fmt.Println("Error reading string", err)
 			continue
 		}
-		command = strings.Replace(command, "\n", "", -1)
-		err = processCommand(zkconn.con, command)
+		line = strings.Replace(line, "\n", "", -1)
+		err = execCmd(zkconn.con, line)
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
 }
 
-func processCommand(con *zk.Conn, command string) error {
-	if command == "" {
+func execCmd(con *zk.Conn, line string) error {
+	if line == "" {
 		return nil
 	}
-	cmds := strings.Fields(command)
+	cmds := strings.Fields(line)
 	if len(cmds) <= 0 {
 		return nil
 	}
 
-	addToHistory(command)
+	defer saveHistory(line)
+
 	cmd := cmds[0]
 	args := cmds[1:]
 
 	switch cmd {
 	case "history":
 		count := len(history)
-		for i := count - 10; i < count; i++ {
+		for i := count - historyCount; i < count; i++ {
 			if i < 0 {
 				continue
 			}
@@ -331,8 +333,11 @@ func execZkCmd(con *zk.Conn, cmd string, args []string) error {
 	return nil
 }
 
-func addToHistory(cmd string) {
+func saveHistory(cmd string) {
 	history = append(history, cmd)
+	if len(history) > historyCount {
+		history = history[1 : historyCount+1]
+	}
 }
 
 //TODO: print only supported cmds
