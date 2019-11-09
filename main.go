@@ -40,6 +40,25 @@ var (
 	lastServer = ""
 )
 
+func main() {
+	flag.Parse()
+	connectZK(*server)
+
+	zkCmds := flag.Args()
+	if zkCmds == nil || len(zkCmds) == 0 {
+		loop()
+	} else {
+		// one time command line
+		err := execZkCmd(zkconn.con, zkCmds[0], zkCmds[1:])
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		} else {
+			os.Exit(0)
+		}
+	}
+}
+
 func connectZK(address string) {
 	if zkconn.con != nil && zkconn.con.State() == zk.StateHasSession {
 		//close existed connection first
@@ -80,25 +99,6 @@ func connectZK(address string) {
 		fmt.Println("Failed to connect zk server, please try later")
 		con.Close()
 		break
-	}
-}
-
-func main() {
-	flag.Parse()
-	connectZK(*server)
-
-	zkCmds := flag.Args()
-	if zkCmds == nil || len(zkCmds) == 0 {
-		loop()
-	} else {
-		// one time command line
-		err := execZkCmd(zkconn.con, zkCmds[0], zkCmds[1:])
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		} else {
-			os.Exit(0)
-		}
 	}
 }
 
