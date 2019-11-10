@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 
-	"medusar.org/zooklient/util"
+	"github.com/medusar/zooklient/util"
 )
 
 //SupportedCmds stores all the supported commands for zookeeper

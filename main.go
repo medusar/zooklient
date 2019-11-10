@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
+	cmdParser "github.com/medusar/zooklient/cmd"
+	"github.com/medusar/zooklient/util"
 	"github.com/samuel/go-zookeeper/zk"
-	cmdParser "medusar.org/zooklient/cmd"
-	"medusar.org/zooklient/util"
 )
 
 type zkConn struct {
