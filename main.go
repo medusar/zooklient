@@ -186,7 +186,6 @@ func execZkCmd(con *zk.Conn, cmd string, args []string) error {
 				printChildren(children, stat)
 			}
 		}
-		break
 	case "get":
 		get, err := cmdParser.ParseGet(args)
 		if err != nil {
@@ -204,7 +203,6 @@ func execZkCmd(con *zk.Conn, cmd string, args []string) error {
 		if get.WithStat {
 			printStat(stat)
 		}
-		break
 	case "stat":
 		statCmd, err := cmdParser.ParseStat(args)
 		if err != nil {
@@ -218,7 +216,6 @@ func execZkCmd(con *zk.Conn, cmd string, args []string) error {
 			return fmt.Errorf("Node does not exist: %s", statCmd.Path)
 		}
 		printStat(stat)
-		break
 	case "set":
 		set, err := cmdParser.ParseSet(args)
 		if err != nil {
@@ -231,7 +228,6 @@ func execZkCmd(con *zk.Conn, cmd string, args []string) error {
 		if set.WithStat {
 			printStat(stat)
 		}
-		break
 	case "create":
 		create, err := cmdParser.ParseCreate(args)
 		if err != nil {
@@ -286,20 +282,20 @@ func execZkCmd(con *zk.Conn, cmd string, args []string) error {
 			return err
 		}
 		fmt.Println("Created", s)
-		break
 	case "getAcl":
-		fmt.Println("Not supported yet")
-		break
+		fallthrough
 	case "setAcl":
-		fmt.Println("Not supported yet")
-		break
+		fallthrough
 	case "setquota":
+		fallthrough
 	case "listquota":
+		fallthrough
 	case "delquota":
+		fallthrough
 	case "addauth":
+		fallthrough
 	case "config":
 		fmt.Println("Not supported yet")
-		break
 	case "sync":
 		if len(args) != 1 {
 			return fmt.Errorf("sync path")
@@ -309,7 +305,6 @@ func execZkCmd(con *zk.Conn, cmd string, args []string) error {
 			return err
 		}
 		fmt.Println("Sync is OK")
-		break
 	case "delete":
 		del, err := cmdParser.ParseDelete(args)
 		if err != nil {
@@ -318,17 +313,17 @@ func execZkCmd(con *zk.Conn, cmd string, args []string) error {
 		if err := con.Delete(del.Path, del.Version); err != nil {
 			return err
 		}
-		break
 	case "deleteall":
-		fmt.Println("Not supported yet")
-		break
+		da, err := cmdParser.ParseDeleteAll(args)
+		if err != nil {
+			return err
+		}
+		return deleteRecursive(zkconn.con, da.Path)
 	case "close":
 		con.Close()
-		break
 	default:
 		printUsage()
 		fmt.Println("Command not found: Command not found", cmd)
-		break
 	}
 	return nil
 }
@@ -340,34 +335,60 @@ func saveHistory(cmd string) {
 	}
 }
 
-//TODO: print only supported cmds
 func printUsage() {
-	fmt.Println(`ZooKeeper -server host:port cmd args
-		addauth scheme auth
-		close
-		config [-c] [-w] [-s]
-		connect host:port
-		create [-s] [-e] [-c] [-t ttl] path [data] [acl]
-		delete [-v version] path
-		deleteall path
-		delquota [-n|-b] path
-		get [-s] [-w] path
-		getAcl [-s] path
-		history
-		listquota path
-		ls [-s] [-w] [-R] path
-		ls2 path [watch]
-		printwatches on|off
-		quit
-		reconfig [-s] [-v version] [[-file path] | [-members serverID=host:port1:port2;port3[,...]*]] | [-add serverId=host:port1:port2;port3[,...]]* [-remove serverId[,...]*]
-		redo cmdno
-		removewatches path [-c|-d|-a] [-l]
-		rmr path
-		set [-s] [-v version] path data
-		setAcl [-s] [-v version] [-R] path acl
-		setquota -n|-b val path
-		stat [-w] path
-		sync path`)
+	fmt.Println("ZooKeeper -server host:port cmd args")
+	fmt.Println("\t\t connect host:port")
+	fmt.Println("\t\t history")
+	fmt.Println("\t\t quit")
+	for _, c := range cmdParser.SupportedCmds {
+		fmt.Println("\t\t", c.Usage())
+	}
+}
+
+func deleteRecursive(con *zk.Conn, path string) error {
+	err := util.ValidatePath(path)
+	if err != nil {
+		return err
+	}
+
+	paths := listSubTreeBFS(con, path)
+
+	deleteReqs := make([]interface{}, 0)
+	total := len(paths)
+	for i := total - 1; i >= 0; i-- {
+		p := paths[i]
+		deleteReqs = append(deleteReqs, &zk.DeleteRequest{Path: p, Version: -1})
+	}
+
+	if _, err := con.Multi(deleteReqs...); err != nil {
+		return err
+	}
+	return nil
+}
+
+func listSubTreeBFS(con *zk.Conn, pathRoot string) []string {
+	queue := make([]string, 0)
+	tree := make([]string, 0)
+
+	queue = append(queue, pathRoot)
+	tree = append(tree, pathRoot)
+
+	for len(queue) > 0 {
+		node := queue[0]
+		queue = queue[1:]
+		children, _, err := con.Children(node)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		for _, child := range children {
+			childPath := node + "/" + child
+			queue = append(queue, childPath)
+			tree = append(tree, childPath)
+		}
+	}
+
+	return tree
 }
 
 func visitSubTree(con *zk.Conn, path string) {

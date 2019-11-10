@@ -27,17 +27,17 @@ func ValidatePath(path string) error {
 	}
 
 	var reason string
-	lastc := '/'
+	lastr := '/'
 	chars := []rune(path)
-	for i, r := range chars {
-		lastc = r
+	for i := 1; i < len(chars); i++ {
+		r := chars[i]
 		if r == 0 {
 			reason = fmt.Sprintf("null character not allowed @%d", i)
 			break
-		} else if r == '/' && lastc == '/' {
+		} else if r == '/' && lastr == '/' {
 			reason = fmt.Sprintf("empty node name specified @%d", i)
 			break
-		} else if r == '.' && lastc == '.' {
+		} else if r == '.' && lastr == '.' {
 			if chars[i-2] == '/' && (i+1 == len(chars) || chars[i+1] == '/') {
 				reason = fmt.Sprintf("relative paths not allowed @%d", i)
 				break
@@ -47,11 +47,12 @@ func ValidatePath(path string) error {
 				reason = fmt.Sprintf("relative paths not allowed @%d", i)
 				break
 			}
-			//TODO: check if this is the right way
 		} else if r > '\u0000' && r <= '\u001f' || r >= '\u007f' && r <= '\u009F' || r >= 0xd800 && r <= 0xf8ff || r >= 0xfff0 && r <= 0xffff {
 			reason = fmt.Sprintf("invalid character @%d", i)
 			break
 		}
+
+		lastr = r
 	}
 	if reason != "" {
 		return fmt.Errorf("Invalid path string \"" + path + "\" caused by " + reason)
@@ -59,7 +60,8 @@ func ValidatePath(path string) error {
 	return nil
 }
 
-//ParseACL parses acl strings into zk.ACL
+//ParseACL parses acl strings into zk.ACL;
+//notation of acl: `scheme:id:perm`
 func ParseACL(acl string) []zk.ACL {
 	acls := strings.Split(acl, ",")
 	zkACLs := make([]zk.ACL, 0)
@@ -70,32 +72,27 @@ func ParseACL(acl string) []zk.ACL {
 			fmt.Println(a + " does not have the form scheme:id:perm")
 			continue
 		}
-		perms := getPerms(a[lastColon+1:])
+		perms := parsePerms(a[lastColon+1:])
 		zkACLs = append(zkACLs, zk.ACL{Scheme: a[0:firstColon], ID: a[firstColon+1 : lastColon], Perms: perms})
 	}
 	return zkACLs
 }
 
-func getPerms(s string) int32 {
+func parsePerms(s string) int32 {
 	perm := int32(0)
 	for _, r := range s {
 		char := string(r)
 		switch char {
 		case "r":
 			perm |= zk.PermRead
-			break
 		case "w":
 			perm |= zk.PermWrite
-			break
 		case "c":
 			perm |= zk.PermCreate
-			break
 		case "d":
 			perm |= zk.PermDelete
-			break
 		case "a":
 			perm |= zk.PermAdmin
-			break
 		default:
 			fmt.Println("Unknown perm type:", char)
 		}

@@ -8,6 +8,12 @@ import (
 	"medusar.org/zooklient/util"
 )
 
+//SupportedCmds stores all the supported commands for zookeeper
+var SupportedCmds = []ZkCmd{
+	&LsCmd{}, &GetCmd{}, &StatCmd{}, &SetCmd{},
+	&DeleteCmd{}, &CreateCmd{}, &DeleteAllCmd{},
+}
+
 //ZkCmd represents a console command of zk client
 type ZkCmd interface {
 	//Usage get the usage information of the cmd
@@ -189,4 +195,26 @@ func ParseCreate(args []string) (*CreateCmd, error) {
 	data := cmd.Arg(1)
 	acl := cmd.Arg(2)
 	return &CreateCmd{HasS: *hasS, HasE: *hasE, HasC: *hasC, HasT: hasT, TTL: *ttl, Path: path, Data: data, ACL: acl}, nil
+}
+
+//DeleteAllCmd stores all the parameters followed by `deleteall`,
+//usage: deleteall path
+type DeleteAllCmd struct {
+	Path string
+}
+
+func (*DeleteAllCmd) Usage() string {
+	return "deleteall path"
+}
+
+func ParseDeleteAll(args []string) (*DeleteAllCmd, error) {
+	cmd := flag.NewFlagSet("deleteall", flag.ContinueOnError)
+	if err := cmd.Parse(args); err != nil {
+		return nil, err
+	}
+	path := cmd.Arg(0)
+	if path == "" {
+		return nil, fmt.Errorf("deleteall path")
+	}
+	return &DeleteAllCmd{path}, nil
 }
