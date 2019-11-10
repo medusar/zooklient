@@ -11,6 +11,13 @@ With `zooklient`, all you need is to download and unzip, and execute the executa
 - unzip the zipfile
 - execute ..
 
+> You can also use go get to install on your computer if you have golang installed on you machine:
+
+```
+go get github.com/medusar/zooklient
+```
+
+
 ## Usage Example
 ```
 ➜  zooklient git:(master) ✗ ./zooklient -server 127.0.0.1:2181
