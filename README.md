@@ -1,4 +1,7 @@
 # zooklient
+[![Build Status](https://travis-ci.com/medusar/zooklient.svg?branch=master)](https://travis-ci.com/medusar/zooklient) 
+[![codecov](https://codecov.io/gh/medusar/zooklient/branch/master/graph/badge.svg)](https://codecov.io/gh/medusar/zooklient)
+
 ## A zookeeper command line client written in go.   
 Sometimes when you want to check the contents in a zookeeper server, you need a command line zookeeper client.   
 Although zookeeper provides a `zkCli.sh` in its release package, it is sometimes big and you will need to download and unzip and 
