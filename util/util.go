@@ -13,17 +13,17 @@ import (
 // If path is valid, nil is returned.
 func ValidatePath(path string) error {
 	if path == "" {
-		return fmt.Errorf("Path cannot be empty")
+		return fmt.Errorf("path cannot be empty")
 	}
 	if string(path[0]) != "/" {
-		return fmt.Errorf("Path must start with / character")
+		return fmt.Errorf("path must start with / character")
 	}
 	if len(path) == 1 { // done checking - it's the root
 		return nil
 	}
 
 	if string(path[len(path)-1]) == "/" {
-		return fmt.Errorf("Path must not end with / character")
+		return fmt.Errorf("path must not end with / character")
 	}
 
 	var reason string
