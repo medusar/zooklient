@@ -34,7 +34,7 @@ var (
 	history = make([]string, 0, historyCount)
 	//default acls when creating nodes in zk
 	unSafeACL = []zk.ACL{
-		zk.ACL{Perms: zk.PermAll, Scheme: "world", ID: "anyone"},
+		{Perms: zk.PermAll, Scheme: "world", ID: "anyone"},
 	}
 
 	server     = flag.String("server", "127.0.0.1:2181", "zooklient -server host:port cmd args")
