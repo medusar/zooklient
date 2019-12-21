@@ -87,6 +87,6 @@ quit
 ➜  zooklient git:(master) ✗
 ```
 
-# Help me to improve
+# Help me improve
 If you find some bugs or want more functions, you can create an issue.   
 I am glad to help.
