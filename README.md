@@ -1,4 +1,4 @@
-# zooklient
+# Zooklient
 [![Build Status](https://travis-ci.com/medusar/zooklient.svg?branch=master)](https://travis-ci.com/medusar/zooklient) 
 [![codecov](https://codecov.io/gh/medusar/zooklient/branch/master/graph/badge.svg)](https://codecov.io/gh/medusar/zooklient)
 [![Go Report Card](https://goreportcard.com/badge/github.com/medusar/zooklient)](https://goreportcard.com/report/github.com/medusar/zooklient)
